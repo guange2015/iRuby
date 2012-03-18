@@ -1,5 +1,5 @@
 //
-//  MainFrameC.h
+//  PostDetailC.h
 //  iRuby
 //
 //  Created by xiaoguang huang on 12-3-18.
@@ -9,11 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "ListViewController.h"
 
-@interface MainFrameC : ListViewController<UITableViewDelegate, UITableViewDataSource>
-{
+@interface PostDetailC : ListViewController<UITableViewDelegate, UITableViewDataSource>
 
-}
-
-@property (nonatomic,retain)NSArray *top_lists ;
 
 @end

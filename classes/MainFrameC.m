@@ -7,12 +7,24 @@
 //
 
 #import "MainFrameC.h"
-#import "SBJson.h"
-#import "INetwork.h"
-#import "OTopic.h"
+#import "UiLib.h"
+#import "AsyncCell.h"
+#import "JSONKit.h"
+#import "SVProgressHUD.h"
+#import "AFJSONRequestOperation.h"
+#import "AppDelegate.h"
+#import "PostDetailC.h"
+
+#define NAV_HEIGHT 44
 
 @implementation MainFrameC
 
+@synthesize  top_lists;
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 70;
+}
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
@@ -21,65 +33,83 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell = [[UITableViewCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"topic cell"];  
+    NSString *indentifier =  @"topic cell";
+    AsyncCell *cell = [tableView dequeueReusableCellWithIdentifier:indentifier];
+    if (cell==nil) {
+        cell = [[AsyncCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"topic cell"]; 
+    }
     
-    OTopic * o = [top_lists objectAtIndex:indexPath.row];
-    cell.textLabel.text = o.title;
-
+    NSDictionary * o = [top_lists objectAtIndex:indexPath.row];
+    [cell updateCellInfo:o];
     return cell;
 }
 
--(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    return 50;
-}
--(void)loadView {
-    self.view = [[[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 640)] autorelease];
-    ib_list = [[UITableView alloc]initWithFrame:self.view.bounds style:UITableViewStylePlain];
-    ib_list.delegate = self;
-    ib_list.dataSource = self;
-    [self.view addSubview:ib_list];
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    UIViewController *vc = [[PostDetailC alloc]init];
+    [APP.nav pushViewController:vc animated:YES];
+    [vc release];
 }
 
--(void)recv_data:(NSData *)data {
-    const char * s = (const char *)[data bytes]; 
-    NSString *ss = [NSString stringWithUTF8String:s];
-    NSArray *l = [ss JSONValue];
+
+-(void)loadView {
+    self.view = [[[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 460-NAV_HEIGHT)] autorelease];
     
-    // 校验收回数据
-    if ([l isKindOfClass:[NSArray class]]) {
-        DLog(@"list count %d", [l count]);
+    UITableView* t = [[UITableView alloc]initWithFrame:self.view.bounds style:UITableViewStylePlain];
+    t.delegate = self;
+    t.dataSource = self;
+    
+    self.table = t;
+    [t release];
+    [self.view addSubview:self.table];
+}
+
+-(void)refreshData {
+    
+    // [SVProgressHUD showInView:self.view];
+    
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://ruby-china.com/api/topics.json"]];
+    AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
         
-        [top_lists removeAllObjects];
-        for (NSDictionary* d in l) {
-            OTopic * o = [OTopic read:d];
-            [top_lists addObject:o];
+        NSArray *l = JSON;
+        // 校验收回数据
+        if ([l isKindOfClass:[NSArray class]]) {
+            DLog(@"list count %d", [l count]);
+            self.top_lists = l;
+            [self.table reloadData];
+            
+            [self performSelector:@selector(doneLoadingTableViewData) withObject:nil];
         }
         
-        [ib_list reloadData];
-    }
-    
+        //[SVProgressHUD dismissWithSuccess:@"Ok!"];
+    } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
+        [SVProgressHUD dismissWithError:[error localizedDescription]];
+    }];
+    [operation start];
 }
 
-- (id)init {
-    DLog(@"init");
-    self = [super init];
-    if (self) {
-        top_lists = [[NSMutableArray alloc]initWithCapacity:20];
-        INetwork *inet = [[INetwork alloc]init];
-        inet.target = JTargetMake(self, @selector(recv_data:));
-        [inet addTask:@"/api/topics.json" content:nil];
-        [inet release];
-    }
-    return self;
+// This is the core method you should implement
+- (void)reloadTableViewDataSource {
+	_reloading = YES;
+    [self refreshData];
 }
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.title = @"活跃帖子"; 
+    
+    self.navigationItem.rightBarButtonItem = [[[UIBarButtonItem alloc]initWithTitle:@"添加" style:UIBarButtonItemStyleBordered target:nil action:nil] autorelease];
+    
+    [self refreshData];
+}
+
 
 - (void)dealloc {
     [top_lists release];
     [super dealloc];
 }
--(_Bool)hiddenNavigationBar {
-    return YES;
-}
+
 
 @end

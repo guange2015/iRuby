@@ -7,16 +7,16 @@
 //
 
 #import "AppDelegate.h"
-#import "Api.h"
-#import "IosApi.h"
 #import "MainFrameC.h"
 
 @implementation AppDelegate
 
 @synthesize window = _window;
+@synthesize nav = _nav;
 
 - (void)dealloc
 {
+    [_nav release];
     [_window release];
     [super dealloc];
 }
@@ -27,14 +27,11 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     
-    [Api initApi];
-    [Api setServer:@"http://ruby-china.com"];
-    
-    [Api setWindow:self.window];
-    
     MainFrameC *vc = [[MainFrameC alloc]init];
-    [Api saveController:vc withType:@"auto"];
+    _nav = [[UINavigationController alloc]initWithRootViewController:vc];
     [vc release];
+    
+    self.window.rootViewController =self.nav;
     
     return YES;
 }
