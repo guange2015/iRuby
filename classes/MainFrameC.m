@@ -46,7 +46,8 @@
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    UIViewController *vc = [[PostDetailC alloc]init];
+    NSDictionary * o = [top_lists objectAtIndex:indexPath.row];
+    UIViewController *vc = [[PostDetailC alloc]initWhitInfo:o];
     [APP.nav pushViewController:vc animated:YES];
     [vc release];
 }
@@ -65,9 +66,7 @@
 }
 
 -(void)refreshData {
-    
     // [SVProgressHUD showInView:self.view];
-    
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://ruby-china.com/api/topics.json"]];
     AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
         

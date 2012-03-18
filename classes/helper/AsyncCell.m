@@ -90,8 +90,6 @@ static UIFont* bold12 = nil;
     
     NSString *replies_count = [NSString stringWithFormat:@"%d",[[info numberForKey:@"replies_count"] intValue] ];
     
-    DLog(@"replies count = %@", replies_count   );
-    
     NSString* last_reply = [NSString stringWithFormat:@"【%@】最后由 %@ %@ 回复",
                             [info stringForKey:@"node_name"],[info stringForKey:@"last_reply_user_login"],time];
 	
@@ -132,7 +130,6 @@ static UIFont* bold12 = nil;
     
     
 	if (urlString) {
-        NSLog(@"avatar_url = %@",urlString);
         AFImageRequestOperation *operation = [AFImageRequestOperation imageRequestOperationWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:urlString]] success:^(UIImage *requestedImage) {
             self.image = requestedImage;
             [self setNeedsDisplay];

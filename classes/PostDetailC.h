@@ -9,7 +9,14 @@
 #import <Foundation/Foundation.h>
 #import "ListViewController.h"
 
+@class MasterPostView;
 @interface PostDetailC : ListViewController<UITableViewDelegate, UITableViewDataSource>
+{
+    NSDictionary *info;
+    MasterPostView *m_cell;
+}
 
+@property (nonatomic, retain)NSArray *replies;
 
+-(id)initWhitInfo:(NSDictionary *)d;
 @end
