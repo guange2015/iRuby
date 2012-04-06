@@ -7,12 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ListViewController.h"
+#import "CommController.h"
 
-@interface MainFrameC : ListViewController<UITableViewDelegate, UITableViewDataSource>
-{
+@interface MainFrameC : CommController
 
-}
 
 @property (nonatomic,retain)NSArray *top_lists ;
 

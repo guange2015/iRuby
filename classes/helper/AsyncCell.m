@@ -74,6 +74,30 @@ static UIFont* bold12 = nil;
     [super dealloc];
 }
 
+
++ (NSDate *)parseRFC3339Date:(NSString *)dateString 
+{
+    if (dateString.length > 20) {
+        dateString = [dateString stringByReplacingOccurrencesOfString:@":"
+                                                           withString:@""
+                                                              options:0
+                                                                range:NSMakeRange(20, dateString.length-20)];
+    }
+    
+    NSDateFormatter *rfc3339TimestampFormatterWithTimeZone = [[NSDateFormatter alloc] init];
+    [rfc3339TimestampFormatterWithTimeZone setLocale:[[[NSLocale alloc] initWithLocaleIdentifier:NSChineseCalendar] autorelease]];
+    [rfc3339TimestampFormatterWithTimeZone setDateFormat:@"yyyy-MM-dd'T'HH:mm:ssZZZ"];
+    
+    NSDate *theDate = nil;
+    NSError *error = nil; 
+    if (![rfc3339TimestampFormatterWithTimeZone getObjectValue:&theDate forString:dateString range:nil error:&error]) {
+        NSLog(@"Date '%@' could not be parsed: %@", dateString, error);
+    }
+    
+    [rfc3339TimestampFormatterWithTimeZone release];
+    return theDate;
+}
+
 - (void) drawContentView:(CGRect)rect {
 	CGContextRef context = UIGraphicsGetCurrentContext();
 	
@@ -85,12 +109,31 @@ static UIFont* bold12 = nil;
 	
 	NSString* text = [info stringForKey:@"title"];
     
-    NSString* user_name = [user stringForKey:@"name"];
-    NSString* time = @"3分钟前"; //需计算
+    NSString* user_name = [user stringForKey:@"login"];
     
+    id x  = [info objectForKey:@"replied_at"];
+    
+    NSDate *date = [self.class parseRFC3339Date:x];
+    
+    NSTimeInterval n = [date timeIntervalSinceNow];
+    long n1 = (long)ABS(n);
+    
+    int hour = 0;
+    int min = 0;
+    if (n1/60/60>0) {
+        hour = n1/60/60;
+    } else {
+        min = n1/60;
+    }
+    
+    NSString* time = [NSString stringWithFormat:@"%d分钟前", min];
+    if (hour>0) {
+        time = [NSString stringWithFormat:@"%d小时前", n]; //需计算
+    }
+
     NSString *replies_count = [NSString stringWithFormat:@"%d",[[info numberForKey:@"replies_count"] intValue] ];
     
-    NSString* last_reply = [NSString stringWithFormat:@"【%@】最后由 %@ %@ 回复",
+    NSString* last_reply = [NSString stringWithFormat:@"【%@】%@于%@回复",
                             [info stringForKey:@"node_name"],[info stringForKey:@"last_reply_user_login"],time];
 	
 	CGFloat widthr = self.frame.size.width - 70;
@@ -104,6 +147,8 @@ static UIFont* bold12 = nil;
         CGSize size = [replies_count sizeWithFont:[UIFont systemFontOfSize:10]];
         
         [replies_count drawInRect:CGRectMake(250.0+(15-size.width )/2, 5.0+(15.0-size.height)/2, 15.0, 15.0) withFont:[UIFont systemFontOfSize:10]];
+        
+        
     }
     
 	[[UIColor blackColor] set];
@@ -124,10 +169,19 @@ static UIFont* bold12 = nil;
     NSDictionary *user =  [info dictionaryForKey:@"user"];
     NSString *urlString = [user stringForKey:@"avatar_url"];
     
+
     if (urlString==nil || [urlString length]<=0) {
-        urlString = @"http://gravatar.com/avatar?s=48";
+        urlString = [user stringForKey:@"gravatar_hash"];
+        if ([urlString length]<=0) {
+            urlString = @"http://gravatar.com/avatar?s=48";
+        } else {
+            urlString = [NSString stringWithFormat:@"http://gravatar.com/avatar/%@?s=48",
+                         urlString
+         ];
+        }
     }
     
+    NSLog(@"avatar_url = %@",urlString);
     
 	if (urlString) {
         AFImageRequestOperation *operation = [AFImageRequestOperation imageRequestOperationWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:urlString]] success:^(UIImage *requestedImage) {

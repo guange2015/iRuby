@@ -7,10 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "ListViewController.h"
+#import "CommController.h"
 
 @class MasterPostView;
-@interface PostDetailC : ListViewController<UITableViewDelegate, UITableViewDataSource>
+@interface PostDetailC : CommController
 {
     NSDictionary *info;
     MasterPostView *m_cell;

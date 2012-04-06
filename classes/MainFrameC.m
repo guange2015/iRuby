@@ -16,6 +16,7 @@
 #import "PostDetailC.h"
 
 #define NAV_HEIGHT 44
+#define ACTIVITY_TAG 0x101
 
 @implementation MainFrameC
 
@@ -28,7 +29,7 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return  [top_lists count];
+    return  [self.top_lists count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -53,36 +54,31 @@
 }
 
 
--(void)loadView {
-    self.view = [[[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 460-NAV_HEIGHT)] autorelease];
-    
-    UITableView* t = [[UITableView alloc]initWithFrame:self.view.bounds style:UITableViewStylePlain];
-    t.delegate = self;
-    t.dataSource = self;
-    
-    self.table = t;
-    [t release];
-    [self.view addSubview:self.table];
-}
+
 
 -(void)refreshData {
-    // [SVProgressHUD showInView:self.view];
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://ruby-china.com/api/topics.json"]];
+    [self setLoading:YES];
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:@"http://ruby-china.org/api/topics.json"]];
     AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
         
         NSArray *l = JSON;
         // 校验收回数据
         if ([l isKindOfClass:[NSArray class]]) {
-            DLog(@"list count %d", [l count]);
             self.top_lists = l;
-            [self.table reloadData];
+            
+            if ([l count]>0) {
+                [self.table setSeparatorStyle:UITableViewCellSeparatorStyleSingleLine];
+                [self.table reloadData];
+                [self loadDataEnd];
+            }
             
             [self performSelector:@selector(doneLoadingTableViewData) withObject:nil];
         }
         
-        //[SVProgressHUD dismissWithSuccess:@"Ok!"];
+        [self setLoading:NO];
     } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
         [SVProgressHUD dismissWithError:[error localizedDescription]];
+        [self setLoading:NO];
     }];
     [operation start];
 }
@@ -110,5 +106,9 @@
     [super dealloc];
 }
 
+
+-(void)loadMoreData {
+    
+}
 
 @end

@@ -11,34 +11,55 @@
 #import "DictionaryHelper.h"
 #import "AFJSONRequestOperation.h"
 #import "SVProgressHUD.h"
+#import "MyWebView.h"
+#import "Api.h"
 
-@interface MasterPostView : UITableViewCell 
+@interface MasterPostView : UITableViewCell {
+    MyWebView *web_v;
+}
 -(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
               info:(NSDictionary *)info;
+
+@property (nonatomic,assign) UITableView* parent;
 @end
 
 @implementation MasterPostView
+@synthesize parent;
+
+-(void)refresh_web {
+    CGRect rc = self.frame;
+    rc.size =  web_v.bounds.size;
+    self.frame = rc;
+    
+    [parent reloadData];
+}
+
 -(id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
 info:(NSDictionary *)info
 {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
-        UITextView *v = [[UITextView alloc]init];
-        v.frame = self.bounds;
-        v.editable = NO;
-        v.text = [info stringForKey:@"body"];
-        [self addSubview:v];
+        web_v = [[MyWebView alloc]initWithFrame:self.bounds];
+
+        NSString *path = [[NSBundle mainBundle] pathForResource:@"template" ofType:@"html"];
+        NSData *myData = [[[NSData alloc] initWithContentsOfFile:path] autorelease];
         
-        CGRect rc = v.frame;
-        rc.size = v.contentSize;
-        v.frame =  rc;
+        NSString *content =[[NSString alloc]initWithData:myData encoding:NSUTF8StringEncoding];
         
-        rc = self.frame;
-        rc.size = v.contentSize;
-        self.frame = rc;
+        NSArray *ary = [content componentsSeparatedByString:@"__BODY__"];
+        NSString *body = [NSString stringWithFormat:@"%@%@%@",[ary objectAtIndex:0],
+         [info stringForKey:@"body_html"],
+         [ary objectAtIndex:1]];
         
+        [content release];
+        NSLog(@"%@",body);
+        [web_v loadHTMLString:body baseURL:nil];
+        [self addSubview:web_v];
+        
+        web_v.jtarget = JTargetMake(self, @selector(refresh_web));        
+        UIView *v = web_v;
+                
         [v release];
-        
     }
     return self;
 }
@@ -136,6 +157,7 @@ info:(NSDictionary *)info
     cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 
     if (indexPath.row == 0) {
+        m_cell.parent = tableView;
         return m_cell; 
     } 
     
@@ -154,19 +176,17 @@ info:(NSDictionary *)info
     return nil;
 }
 
-
 -(void)refreshData {
-    // [SVProgressHUD showInView:self.view];
+    [self setLoading:YES];
     int _id = [[info numberForKey:@"_id"] intValue];
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:
-                            [NSString stringWithFormat:@"http://ruby-china.com/api/topics/%d.json",_id]]];
+                            [NSString stringWithFormat:@"http://ruby-china.org/api/topics/%d.json",_id]]];
     
     AFJSONRequestOperation *operation = [AFJSONRequestOperation JSONRequestOperationWithRequest:request success:^(NSURLRequest *request, NSHTTPURLResponse *response, id JSON) {
         
         NSDictionary *d = JSON;
         // 校验收回数据
         if ([d isKindOfClass:[NSDictionary class]]) {
-
             self.replies = [d arrayForKey:@"replies"];
             self.replies = [self.replies sortedArrayUsingComparator:^NSComparisonResult(NSDictionary* obj1, NSDictionary* obj2) {
                 if( [[obj1 numberForKey:@"_id"] intValue] < [[obj2 numberForKey:@"_id"] intValue] )
@@ -177,14 +197,19 @@ info:(NSDictionary *)info
                 return (NSComparisonResult)NSOrderedSame;
             }];
             
-            [self.table reloadData];
+            if ([self.replies count]>0) {
+                [self.table setSeparatorStyle:UITableViewCellSeparatorStyleSingleLine];
+                [self.table reloadData];
+            }
             
             [self performSelector:@selector(doneLoadingTableViewData) withObject:nil];
+            [self setLoading:NO];
         }
         
         //[SVProgressHUD dismissWithSuccess:@"Ok!"];
     } failure:^(NSURLRequest *request, NSHTTPURLResponse *response, NSError *error) {
         [SVProgressHUD dismissWithError:[error localizedDescription]];
+        [self setLoading:NO];
     }];
     [operation start];
 }
@@ -203,7 +228,7 @@ info:(NSDictionary *)info
         self.title = [info stringForKey:@"title"];
         
         m_cell = [[MasterPostView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"master post view" info:info];
-        
+
         [self refreshData];
     }
     return self;
@@ -216,16 +241,6 @@ info:(NSDictionary *)info
     [super dealloc];
 }
 
--(void)loadView {
-    self.view = [[[UIView alloc]initWithFrame:CGRectMake(0, 0, 320, 460-44)] autorelease];
-    
-    UITableView* t = [[UITableView alloc]initWithFrame:self.view.bounds style:UITableViewStylePlain];
-    t.delegate = self;
-    t.dataSource = self;
-    
-    self.table = t;
-    [t release];
-    [self.view addSubview:self.table];
-}
+
 
 @end
