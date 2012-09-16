@@ -22,4 +22,5 @@ CG_INLINE JTarget JTargetMake(NSObject * ins,SEL act){
 
 @interface Api : NSObject
 
++(NSString *)hunmanDate:(NSDate *)date;
 @end

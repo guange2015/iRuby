@@ -10,8 +10,10 @@
 #import "CommController.h"
 
 @interface MainFrameC : CommController
+{
+    int lastPage;
+}
 
-
-@property (nonatomic,retain)NSArray *top_lists ;
+@property (nonatomic,retain)NSMutableArray *top_lists ;
 
 @end

@@ -16,6 +16,7 @@
 
 - (void)dealloc
 {
+    [_serverUrl release];
     [_nav release];
     [_window release];
     [super dealloc];
@@ -27,11 +28,13 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     
+    self.serverUrl = @"http://ruby-china.org";
     MainFrameC *vc = [[MainFrameC alloc]init];
     _nav = [[UINavigationController alloc]initWithRootViewController:vc];
     [vc release];
     
     self.window.rootViewController =self.nav;
+    
     
     return YES;
 }

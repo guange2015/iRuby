@@ -31,6 +31,8 @@
 
 #import "UIImageView+AFNetworking.h"
 
+#import "Api.h"
+
 @implementation AsyncCell
 
 @synthesize info;
@@ -61,8 +63,8 @@ static UIFont* bold12 = nil;
 	{
 		system14 = [[UIFont systemFontOfSize:14] retain];
 		bold14 = [[UIFont boldSystemFontOfSize:14] retain];
-        system12 = [[UIFont systemFontOfSize:14] retain];
-        bold12 = [[UIFont boldSystemFontOfSize:14] retain];
+        system12 = [[UIFont systemFontOfSize:12] retain];
+        bold12 = [[UIFont boldSystemFontOfSize:12] retain];
 
 	}
 }
@@ -114,23 +116,7 @@ static UIFont* bold12 = nil;
     id x  = [info objectForKey:@"replied_at"];
     
     NSDate *date = [self.class parseRFC3339Date:x];
-    
-    NSTimeInterval n = [date timeIntervalSinceNow];
-    long n1 = (long)ABS(n);
-    
-    int hour = 0;
-    int min = 0;
-    if (n1/60/60>0) {
-        hour = n1/60/60;
-    } else {
-        min = n1/60;
-    }
-    
-    NSString* time = [NSString stringWithFormat:@"%d分钟前", min];
-    if (hour>0) {
-        time = [NSString stringWithFormat:@"%d小时前", n]; //需计算
-    }
-
+    NSString *time = [Api hunmanDate:date];
     NSString *replies_count = [NSString stringWithFormat:@"%d",[[info numberForKey:@"replies_count"] intValue] ];
     
     NSString* last_reply = [NSString stringWithFormat:@"【%@】%@于%@回复",
@@ -153,11 +139,12 @@ static UIFont* bold12 = nil;
     
 	[[UIColor blackColor] set];
     
-	[text drawInRect:CGRectMake(63.0, 25.0, widthr, 20.0) withFont:bold14 lineBreakMode:UILineBreakModeTailTruncation];
+    CGSize size = [text sizeWithFont:system14 constrainedToSize:CGSizeMake(widthr, 9999)];
+	[text drawInRect:CGRectMake(63.0, 28.0, widthr, size.height) withFont:system14 lineBreakMode:UILineBreakModeWordWrap];
     
     [[UIColor grayColor] set];
-    [last_reply drawInRect:CGRectMake(63.0, 45.0, widthr, 20.0) withFont:bold12 lineBreakMode:UILineBreakModeTailTruncation];
-	
+//    [last_reply drawInRect:CGRectMake(63.0, 45.0, widthr, 20.0) withFont:bold12 lineBreakMode:UILineBreakModeTailTruncation];
+//	
 	if (self.image) {
 		CGRect r = CGRectMake(5.0, 10.0, 48.0, 48.0);
 		[self.image drawInRect:r];

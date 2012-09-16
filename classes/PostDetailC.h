@@ -12,11 +12,12 @@
 @class MasterPostView;
 @interface PostDetailC : CommController
 {
-    NSDictionary *info;
+    
     MasterPostView *m_cell;
 }
 
 @property (nonatomic, retain)NSArray *replies;
+@property (nonatomic, retain)NSDictionary *info;
 
 -(id)initWhitInfo:(NSDictionary *)d;
 @end

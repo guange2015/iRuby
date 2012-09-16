@@ -178,7 +178,7 @@ info:(NSDictionary *)info
 
 -(void)refreshData {
     [self setLoading:YES];
-    int _id = [[info numberForKey:@"_id"] intValue];
+    int _id = [[self.info numberForKey:@"_id"] intValue];
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:
                             [NSString stringWithFormat:@"http://ruby-china.org/api/topics/%d.json",_id]]];
     
@@ -223,11 +223,11 @@ info:(NSDictionary *)info
 -(id)initWhitInfo:(NSDictionary *)d {
     self = [super init];
     if (self) {
-        info = [d retain];
+        self.info = d;
         
-        self.title = [info stringForKey:@"title"];
+        self.title = [self.info stringForKey:@"title"];
         
-        m_cell = [[MasterPostView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"master post view" info:info];
+        m_cell = [[MasterPostView alloc]initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"master post view" info:self.info];
 
         [self refreshData];
     }
@@ -237,7 +237,7 @@ info:(NSDictionary *)info
 - (void)dealloc {
     [replies release];
     [m_cell release];
-    [info release];
+    [_info release];
     [super dealloc];
 }
 

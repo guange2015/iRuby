@@ -19,4 +19,6 @@
 @property (strong, nonatomic) UIWindow *window;
 
 @property (nonatomic, assign) UINavigationController *nav;
+
+@property (nonatomic,copy) NSString *serverUrl;
 @end
